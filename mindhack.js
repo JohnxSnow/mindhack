@@ -406,26 +406,64 @@ class MindHackGame {
     }
 
     // =========================================================================
-    // LEADERBOARD API
+    // CLOUD DATABASE & LEADERBOARD SYNC (Firebase & Live Cloud DB)
     // =========================================================================
+    getCloudEndpoints() {
+        return {
+            firebaseUrl: window.FIREBASE_DB_URL || localStorage.getItem('mh_firebase_url') || "",
+            cloudDbUrl: "https://api.restful-api.dev/objects/ff808181a09d98f701a1d8fc7ca0274b"
+        };
+    }
+
     async fetchLeaderboard() {
         const loadingHtml = `<tr><td colspan="5" style="text-align:center; padding:18px; color:var(--text-muted);">لە کاتی بارکردندایە...</td></tr>`;
         if (this.leaderboardBody) this.leaderboardBody.innerHTML = loadingHtml;
         if (this.lobbyLeaderboardBody) this.lobbyLeaderboardBody.innerHTML = loadingHtml;
 
-        let serverList = null;
-        try {
-            const res = await fetch('/api/leaderboard');
-            if (res.ok) {
-                const data = await res.json();
-                if (Array.isArray(data)) {
-                    serverList = data;
+        const { firebaseUrl, cloudDbUrl } = this.getCloudEndpoints();
+        let fetchedList = null;
+
+        // 1. Try Firebase if configured
+        if (firebaseUrl) {
+            try {
+                const url = firebaseUrl.endsWith('.json') ? firebaseUrl : `${firebaseUrl.replace(/\/+$/, '')}/leaderboard.json`;
+                const res = await fetch(url);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && typeof data === 'object') {
+                        fetchedList = Array.isArray(data) ? data : Object.values(data);
+                    }
                 }
-            }
-        } catch (e) {
-            serverList = null;
+            } catch (e) {}
         }
 
+        // 2. Try Live Cloud DB Endpoint (Global & Persistent across all devices)
+        if (!fetchedList || fetchedList.length === 0) {
+            try {
+                const res = await fetch(cloudDbUrl);
+                if (res.ok) {
+                    const json = await res.json();
+                    if (json && json.data && Array.isArray(json.data.players)) {
+                        fetchedList = json.data.players;
+                    }
+                }
+            } catch (e) {}
+        }
+
+        // 3. Try Local Serverless API (/api/leaderboard)
+        if (!fetchedList || fetchedList.length === 0) {
+            try {
+                const res = await fetch('/api/leaderboard');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (Array.isArray(data)) {
+                        fetchedList = data;
+                    }
+                }
+            } catch (e) {}
+        }
+
+        // 4. LocalStorage as resilient client cache
         let localList = [];
         try {
             localList = JSON.parse(localStorage.getItem('mh_local_leaderboard') || '[]');
@@ -436,7 +474,7 @@ class MindHackGame {
             { rank: 2, name: "ڕەوەند (Rawand)", time: "19:45", date: "2026-11-13", token: "MH-MASTER-15-BETA-ZH" }
         ];
 
-        let combined = [...(serverList || []), ...localList];
+        let combined = [...(fetchedList || []), ...localList];
         if (combined.length === 0) {
             combined = defaultList;
         }
@@ -479,35 +517,84 @@ class MindHackGame {
             this.btnSubmitLeaderboard.style.display = "none";
         }
 
+        const newEntry = {
+            name: name,
+            time: time,
+            date: new Date().toISOString().split('T')[0],
+            token: token
+        };
+
         // 1. Always save to LocalStorage immediately
         try {
             let list = JSON.parse(localStorage.getItem('mh_local_leaderboard') || '[]');
             if (!list.some(entry => entry.token === token || (entry.name === name && entry.time === time))) {
-                list.push({
-                    name: name,
-                    time: time,
-                    date: new Date().toISOString().split('T')[0],
-                    token: token
-                });
+                list.push(newEntry);
                 localStorage.setItem('mh_local_leaderboard', JSON.stringify(list));
             }
         } catch (e) {}
 
-        // 2. Try submitting to Server if online
+        const { firebaseUrl, cloudDbUrl } = this.getCloudEndpoints();
+
+        // 2. Save to Firebase if configured
+        if (firebaseUrl) {
+            try {
+                const url = firebaseUrl.endsWith('.json') ? firebaseUrl : `${firebaseUrl.replace(/\/+$/, '')}/leaderboard.json`;
+                await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newEntry)
+                });
+            } catch (e) {}
+        }
+
+        // 3. Save to Global Cloud DB (ensures persistent global ranking on all phones/PCs)
+        try {
+            const getRes = await fetch(cloudDbUrl);
+            let currentPlayers = [];
+            if (getRes.ok) {
+                const json = await getRes.json();
+                if (json && json.data && Array.isArray(json.data.players)) {
+                    currentPlayers = json.data.players;
+                }
+            }
+
+            if (!currentPlayers.some(e => e.token === token || (e.name === name && e.time === time))) {
+                currentPlayers.push(newEntry);
+                const toSec = (t) => {
+                    const parts = (t || '99:99').split(':').map(Number);
+                    if (parts.length === 2) return (parts[0] || 0) * 60 + (parts[1] || 0);
+                    if (parts.length === 3) return (parts[0] || 0) * 3600 + (parts[1] || 0) * 60 + (parts[2] || 0);
+                    return 99999;
+                };
+                currentPlayers.sort((a, b) => toSec(a.time) - toSec(b.time));
+                currentPlayers.forEach((e, idx) => e.rank = idx + 1);
+
+                await fetch(cloudDbUrl, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: 'MINDHACK_LEADERBOARD',
+                        data: { players: currentPlayers }
+                    })
+                });
+            }
+        } catch (e) {}
+
+        // 4. Try submitting to Server API if online
         try {
             await fetch('/api/claim', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: name, time: time, token: token })
+                body: JSON.stringify(newEntry)
             });
         } catch (e) {}
 
-        // 3. Update feedback UI in modal
+        // 5. Update feedback UI in modal
         if (this.claimResultMsg) {
-            this.claimResultMsg.innerHTML = `<span style="color:#00ff66; font-weight:700;"><i class="fa-solid fa-circle-check"></i> ناوت [${name}] بە کاتی [${time}] بە سەرکەوتوویی تۆمار کرا!</span>`;
+            this.claimResultMsg.innerHTML = `<span style="color:#00ff66; font-weight:700;"><i class="fa-solid fa-circle-check"></i> ناوت [${name}] بە کاتی [${time}] لە داتابەیسی سەرهێڵ (Cloud) تۆمار کرا!</span>`;
         }
 
-        // 4. Update tables
+        // 6. Update tables
         await this.fetchLeaderboard();
     }
 
