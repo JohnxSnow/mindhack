@@ -696,7 +696,13 @@ body.cyber-terminal-theme {
 }
 
 .game-stage-screen {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-height: 100vh;
     animation: fadeInScreen 0.4s ease-out;
+    position: relative;
+    z-index: 10;
 }
 
 /* ==========================================================================
@@ -918,8 +924,8 @@ body.cyber-terminal-theme {
 .terminal-container {
     max-width: 1200px;
     width: 100%;
-    margin: 24px auto;
-    padding: 0 20px;
+    margin: 16px auto 30px;
+    padding: 0 16px;
     flex: 1;
     position: relative;
     z-index: 10;
@@ -933,7 +939,8 @@ body.cyber-terminal-theme {
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    min-height: 620px;
+    min-height: 460px;
+    width: 100%;
 }
 
 /* Titlebar */
@@ -944,6 +951,8 @@ body.cyber-terminal-theme {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
 }
 
 .window-dots {
@@ -979,9 +988,17 @@ body.cyber-terminal-theme {
 /* Terminal Screen Body */
 .terminal-body {
     flex: 1;
-    padding: 26px;
+    padding: 22px 20px;
     overflow-y: auto;
+    max-height: 54vh;
+    min-height: 220px;
     display: flex;
+    flex-direction: column;
+    gap: 16px;
+    font-family: var(--font-kurdish);
+    line-height: 1.7;
+    position: relative;
+}
     flex-direction: column;
     gap: 18px;
     font-family: var(--font-kurdish);
@@ -1117,24 +1134,36 @@ body.cyber-terminal-theme {
 
 #cyber-input {
     flex: 1;
-    background: transparent;
-    border: none;
+    min-width: 0;
+    background: rgba(0, 0, 0, 0.45);
+    border: 1px solid rgba(0, 255, 102, 0.25);
+    border-radius: 6px;
+    padding: 10px 14px;
     outline: none;
     color: #fff;
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     font-family: var(--font-mono);
     direction: ltr;
     text-align: left;
+    transition: all 0.2s;
+}
+
+#cyber-input:focus {
+    border-color: var(--neon-green);
+    box-shadow: 0 0 14px var(--neon-green-glow);
 }
 
 #cyber-input::placeholder {
-    color: #555e69;
+    color: #6b7280;
     font-family: var(--font-kurdish);
     direction: rtl;
     text-align: right;
+    font-size: 0.95rem;
 }
 
 .btn-cyber-submit {
+    flex-shrink: 0;
+    white-space: nowrap;
     background: var(--neon-green);
     color: #000;
     border: none;
@@ -1143,9 +1172,12 @@ body.cyber-terminal-theme {
     font-weight: 800;
     font-size: 0.95rem;
     cursor: pointer;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 8px;
+    transition: all 0.2s;
+    font-family: var(--font-kurdish);
+}
     transition: all 0.2s;
 }
 
@@ -1737,6 +1769,30 @@ input, textarea, select {
 
 /* Tablets & iPads (768px - 1024px) */
 @media (max-width: 1024px) {
+    .header-inner {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        padding: 12px 18px;
+    }
+    .terminal-brand {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        width: 100%;
+        gap: 8px;
+    }
+    .progress-zone {
+        width: 100%;
+        max-width: 100%;
+    }
+    .header-right {
+        width: 100%;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
     .lobby-container {
         padding: 20px 14px 40px;
     }
@@ -1744,12 +1800,12 @@ input, textarea, select {
         gap: 16px;
     }
     .terminal-container {
-        max-width: 95%;
-        margin: 18px auto;
+        max-width: 98%;
+        margin: 14px auto;
         padding: 0 10px;
     }
     .terminal-window {
-        min-height: 560px;
+        min-height: auto;
     }
     .door-grid {
         grid-template-columns: repeat(3, 1fr);
@@ -1874,5 +1930,56 @@ input, textarea, select {
     }
     .claim-input-group .cyber-btn {
         width: 100%;
+    }
+}
+
+/* Small Screens & Mobile Phones (below 650px) */
+@media (max-width: 650px) {
+    .terminal-brand {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+    .terminal-title {
+        font-size: 0.95rem;
+    }
+    .header-right {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+    .header-right .dev-tag {
+        grid-column: span 2;
+        justify-content: center;
+    }
+    .terminal-input-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        padding: 12px;
+    }
+    .prompt-arrow {
+        display: none;
+    }
+    .btn-cyber-submit {
+        width: 100%;
+        justify-content: center;
+        padding: 12px;
+    }
+    .cyber-toolbelt {
+        padding: 8px 10px;
+        gap: 6px;
+    }
+    .mini-tool-btn {
+        flex: 1 1 calc(50% - 6px);
+        justify-content: center;
+        font-size: 0.76rem;
+    }
+    .window-titlebar {
+        padding: 10px 14px;
+        gap: 8px;
+    }
+    .window-title {
+        font-size: 0.9rem;
     }
 }

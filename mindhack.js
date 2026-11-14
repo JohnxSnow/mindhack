@@ -200,16 +200,23 @@ class MindHackGame {
 
         if (this.introScreen) this.introScreen.style.display = "none";
         if (this.lobbyScreen) this.lobbyScreen.style.display = "none";
-        if (this.gameStage) this.gameStage.style.display = "flex";
+        if (this.gameStage) {
+            this.gameStage.style.display = "flex";
+            this.gameStage.style.flexDirection = "column";
+        }
 
         if (!this.startTime) {
             this.startSpeedrunTimer();
         }
 
+        // Render current level fresh to ensure full height and layout
+        this.loadLevel(this.currentLevel || 1);
+
         if (this.cyberInput) {
             this.cyberInput.focus();
         }
         this.playSuccessBeep();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     toggleSound() {
@@ -794,12 +801,14 @@ class MindHackGame {
     // =========================================================================
     loadLevel(lvl) {
         this.currentLevel = lvl;
-        this.currentLevelDisplay.innerText = `${lvl} لە ${this.totalLevels}`;
-        this.clearanceTag.innerText = `ئاست: ${lvl} / 15`;
-        this.progressBarFill.style.width = `${(lvl / this.totalLevels) * 100}%`;
-        this.cyberInput.value = "";
-        this.cyberInput.focus();
-        this.inputBarContainer.style.display = "flex";
+        if (this.currentLevelDisplay) this.currentLevelDisplay.innerText = `${lvl} لە ${this.totalLevels}`;
+        if (this.clearanceTag) this.clearanceTag.innerText = `ئاست: ${lvl} / 15`;
+        if (this.progressBarFill) this.progressBarFill.style.width = `${(lvl / this.totalLevels) * 100}%`;
+        if (this.cyberInput) {
+            this.cyberInput.value = "";
+            this.cyberInput.focus();
+        }
+        if (this.inputBarContainer) this.inputBarContainer.style.display = "flex";
 
         switch (lvl) {
             case 1: this.renderLevel1(); break;
