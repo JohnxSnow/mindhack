@@ -1745,6 +1745,30 @@ body.cyber-terminal-theme {
     font-size: 1rem;
 }
 
+.victory-return-lobby-btn {
+    background: rgba(0, 243, 255, 0.12);
+    color: var(--neon-cyan);
+    border: 1px solid var(--neon-cyan);
+    box-shadow: 0 0 18px rgba(0, 243, 255, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 13px 20px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.victory-return-lobby-btn:hover {
+    background: rgba(0, 243, 255, 0.25);
+    color: #fff;
+    box-shadow: 0 0 28px rgba(0, 243, 255, 0.6);
+    transform: translateY(-2px);
+}
+
 /* Shake Animation */
 .glitch-shake {
     animation: shakeAnim 0.35s ease-in-out;

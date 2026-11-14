@@ -129,6 +129,7 @@ class MindHackGame {
         this.btnSubmitLeaderboard = document.getElementById("btn-submit-leaderboard");
         this.claimResultMsg = document.getElementById("claim-result-msg");
         this.btnDownloadStoryCard = document.getElementById("btn-download-story-card");
+        this.btnVictoryReturnLobby = document.getElementById("btn-victory-return-lobby");
         this.storyCanvas = document.getElementById("story-card-canvas");
 
         this.btnSoundToggle = document.getElementById("btn-sound-toggle");
@@ -180,6 +181,7 @@ class MindHackGame {
     }
 
     showLobby() {
+        if (this.modalVictory) this.modalVictory.style.display = "none";
         if (this.introScreen) this.introScreen.style.display = "none";
         if (this.lobbyScreen) this.lobbyScreen.style.display = "flex";
         if (this.gameStage) this.gameStage.style.display = "none";
@@ -198,11 +200,17 @@ class MindHackGame {
             return;
         }
 
+        if (this.modalVictory) this.modalVictory.style.display = "none";
         if (this.introScreen) this.introScreen.style.display = "none";
         if (this.lobbyScreen) this.lobbyScreen.style.display = "none";
         if (this.gameStage) {
             this.gameStage.style.display = "flex";
             this.gameStage.style.flexDirection = "column";
+        }
+
+        if (!this.currentLevel || this.currentLevel >= 15) {
+            this.currentLevel = 1;
+            this.startTime = null;
         }
 
         if (!this.startTime) {
@@ -333,6 +341,16 @@ class MindHackGame {
 
         // Download Story Card
         this.btnDownloadStoryCard.addEventListener("click", () => this.generateAndDownloadStoryCard());
+
+        // Return to Lobby from Victory Modal
+        if (this.btnVictoryReturnLobby) {
+            this.btnVictoryReturnLobby.addEventListener("click", () => {
+                if (this.modalVictory) this.modalVictory.style.display = "none";
+                this.currentLevel = 1;
+                this.startTime = null;
+                this.showLobby();
+            });
+        }
 
         // Backdrop click
         window.addEventListener("click", (e) => {
