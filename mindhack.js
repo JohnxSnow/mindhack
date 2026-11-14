@@ -410,7 +410,7 @@ class MindHackGame {
     // =========================================================================
     getCloudEndpoints() {
         return {
-            firebaseUrl: window.FIREBASE_DB_URL || localStorage.getItem('mh_firebase_url') || "",
+            firebaseUrl: window.FIREBASE_DB_URL || localStorage.getItem('mh_firebase_url') || "https://mindhack-5e48a-default-rtdb.firebaseio.com/leaderboard.json",
             cloudDbUrl: "https://api.restful-api.dev/objects/ff808181a09d98f701a1d8fc7ca0274b"
         };
     }
