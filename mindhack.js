@@ -474,10 +474,7 @@ class MindHackGame {
             { rank: 2, name: "ڕەوەند (Rawand)", time: "19:45", date: "2026-11-13", token: "MH-MASTER-15-BETA-ZH" }
         ];
 
-        let combined = [...(fetchedList || []), ...localList];
-        if (combined.length === 0) {
-            combined = defaultList;
-        }
+        let combined = [...(fetchedList || []), ...localList, ...defaultList];
 
         const seen = new Set();
         const unique = [];
