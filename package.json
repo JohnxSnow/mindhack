@@ -1,0 +1,22 @@
+{
+  "name": "mindhack-game",
+  "version": "2.0.0",
+  "description": "MIND_HACK v2.0 - 15-Level Hardcore Mentalism & Cyber Investigation Room by Zhiyar Hemn",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "game",
+    "mentalism",
+    "puzzle",
+    "cybersecurity",
+    "kurdish",
+    "riddles"
+  ],
+  "author": "Zhiyar Hemn (ژیار هێمن)",
+  "license": "MIT"
+}

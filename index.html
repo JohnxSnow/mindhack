@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="ckb" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MIND_HACK v2.0 | ژووری ١٥ مەتەڵی مێنتالیزم - ژیار هێمن</title>
+    
+    <!-- OpenGraph & Social Media Previews -->
+    <meta property="og:title" content="MIND_HACK v2.0 | ژووری ١٥ مەتەڵی مێنتالیزم - ژیار هێمن">
+    <meta property="og:description" content="ئایا دەتوانیت ١٥ مەتەڵی مێنتالیزم، بیرکاری، و شیفرەشکاندنی ژیار هێمن ببڕیت و خەڵاتی ١٥ دۆلار بەدەستبهێنیت؟">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1200&auto=format&fit=crop&q=80">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="author" content="Zhiyar Hemn (ژیار هێمن)">
+    
+    <!-- Favicon & PWA Manifest -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="manifest" href="manifest.json">
+
+    <!-- Google Fonts: Vazirmatn & Share Tech Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom Style -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="cyber-terminal-theme">
+
+    <!-- Matrix Background & CRT Filters -->
+    <div class="crt-scanlines"></div>
+    <div class="crt-glow"></div>
+    <canvas id="matrix-canvas"></canvas>
+
+    <!-- ====================================================================
+         1. CINEMATIC CYBER INTRO SCREEN (Splash Boot Sequence)
+         ==================================================================== -->
+    <div id="intro-screen" class="cyber-intro-screen">
+        <div class="intro-box">
+            <div class="intro-scanner"></div>
+            <div class="intro-emblem">
+                <span class="intro-glitch" data-text="MIND_HACK">MIND_HACK</span>
+                <span class="intro-version">SYSTEM://v2.0_HARDCORE</span>
+            </div>
+            
+            <div class="intro-architect">
+                <span>ئەندازیار و دروستکەر:</span>
+                <strong>ژیار هێمن (Zhiyar Hemn)</strong>
+            </div>
+
+            <!-- Terminal Typewriter Boot Lines -->
+            <div class="intro-terminal-log" id="intro-log-stream">
+                <div class="log-line text-green">&gt; INITIALIZING SECURE KERNEL... OK</div>
+                <div class="log-line text-cyan">&gt; LOADING 15 PROGRESSIVE MENTALISM RIDDLES... DONE</div>
+                <div class="log-line text-gold">&gt; PRIZE POOL $15 USD ALLOCATED FOR #1 BREAKER... READY</div>
+                <div class="log-line text-green blink">&gt; SYSTEM AWAITING HUMAN INTELLECT...</div>
+            </div>
+
+            <!-- Player Name Registration Box (Required to Enter) -->
+            <div class="intro-player-reg-box">
+                <label for="player-name-intro" class="reg-label">
+                    <i class="fa-solid fa-id-card-clip"></i>
+                    <span>تۆمارکردنی ناوی بەشداربوو (ناوی هاکەر بۆ مۆری فەرمی):</span>
+                </label>
+                <div class="reg-input-wrapper">
+                    <i class="fa-solid fa-user-ninja input-icon"></i>
+                    <input 
+                        type="text" 
+                        id="player-name-intro" 
+                        placeholder="ناوەکەت لێرە بنووسە (بۆ نموونە: ئاراس، هێمن، ڕێبین)..." 
+                        maxlength="30" 
+                        autocomplete="off" 
+                        spellcheck="false"
+                        required>
+                </div>
+                <div id="player-name-error" class="reg-error-msg" style="display: none;">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span>تکایە ناوی خۆت بنووسە بۆ تۆمارکردن لە سیستەم و دەرکردنی مۆری بردنەوە!</span>
+                </div>
+            </div>
+
+            <div class="intro-actions">
+                <button id="btn-enter-lobby" class="btn-intro-enter pulse-glow">
+                    <span>چوونە ناو لۆبیی یاری (ENTER LOBBY)</span>
+                    <i class="fa-solid fa-arrow-left"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         2. MAIN LOBBY SCREEN (Rules, $15 Prize, Leaderboard & Launch)
+         ==================================================================== -->
+    <div id="lobby-screen" class="cyber-lobby-screen" style="display: none;">
+        
+        <!-- Lobby Top Navigation -->
+        <header class="lobby-header">
+            <div class="lobby-brand">
+                <span class="status-dot blink"></span>
+                <span class="brand-text">MIND_HACK // LOBBY</span>
+                <span class="server-badge" id="lobby-server-status"><i class="fa-solid fa-shield-halved"></i> سێرڤەر: پارێزراوە</span>
+            </div>
+
+            <div class="lobby-header-actions">
+                <div class="player-pill" id="lobby-player-pill" title="هاکەری تۆمارکراو">
+                    <i class="fa-solid fa-user-ninja"></i>
+                    <span class="player-lbl">هاکەر:</span>
+                    <strong id="lobby-player-name-display" class="player-val">میوان</strong>
+                </div>
+
+                <button id="btn-sound-toggle-lobby" class="cyber-icon-btn" title="دەنگ">
+                    <i class="fa-solid fa-volume-high"></i>
+                </button>
+
+                <div class="dev-tag" id="btn-dev-info-lobby" title="گەشەپێدەر">
+                    <span class="dev-badge-title">گەشەپێدەر:</span>
+                    <strong class="dev-author">Zhiyar Hemn</strong>
+                </div>
+            </div>
+        </header>
+
+        <!-- Lobby Main Content -->
+        <div class="lobby-container">
+            
+            <!-- Hero Title -->
+            <div class="lobby-hero">
+                <h1 class="hero-title">
+                    <i class="fa-solid fa-brain hero-brain-icon"></i>
+                    ژووری ١٥ مەتەڵی مێنتالیزم و هاکینگی مێشک
+                </h1>
+                <p class="hero-subtitle">
+                    گەشتێکی سەخت لە نێوان لۆژیک، بیرکاری، شیفرەشکاندن، و فێڵە دەروونییەکانی مێنتالیزم لەلایەن <strong>ژیار هێمن (Zhiyar Hemn)</strong>
+                </p>
+            </div>
+
+            <!-- Big Glowing Call-to-Action Launch Button -->
+            <div class="lobby-cta-zone">
+                <button id="btn-start-game-main" class="btn-launch-game">
+                    <span class="pulse-ring"></span>
+                    <i class="fa-solid fa-terminal"></i>
+                    <span class="btn-text">دەستپێکردنی تاقیکردنەوە (START HACK)</span>
+                    <i class="fa-solid fa-bolt"></i>
+                </button>
+                <span class="cta-note"><i class="fa-solid fa-stopwatch"></i> کاتژمێری پێشبڕکێ دەستبەجێ دوای کلیککردن دەکەوێتە کار!</span>
+            </div>
+
+            <!-- GRID: $15 Prize Card & Rules -->
+            <div class="lobby-grid">
+                
+                <!-- $15 PRIZE CARD (Glowing Gold) -->
+                <div class="lobby-card prize-card">
+                    <div class="card-badge-gold"><i class="fa-solid fa-trophy"></i> خەڵاتی فەرمی</div>
+                    <div class="prize-header">
+                        <div class="prize-coin-icon">
+                            <i class="fa-solid fa-sack-dollar"></i>
+                        </div>
+                        <div class="prize-title-box">
+                            <h2>خەڵاتی ١٥$ نەختینەیی (15 USD)</h2>
+                            <p>بۆ یەکەم کەس کە تەواوی ١٥ قۆناغەکە بە سەرکەوتوویی تێکبشکێنێت!</p>
+                        </div>
+                    </div>
+
+                    <div class="prize-steps">
+                        <h4><i class="fa-solid fa-list-check"></i> چۆنیەتی بردنەوەی خەڵاتەکە:</h4>
+                        <ol>
+                            <li><strong>تێکشکاندنی ١٥ قۆناغ:</strong> بەبێ فێڵکردن مەتەڵ و شیفرەکان لە سێرڤەر بشکێنە.</li>
+                            <li><strong>وەرگرتنی تۆکنی بردنەوە:</strong> لە قۆناغی ١٥ کۆدێکی فەرمیی تایبەت بە خۆت پێدەدرێت (MH-MASTER-15-...).</li>
+                            <li><strong>ناردن بۆ ژیار هێمن لە واتسئاپ:</strong> بە یەک کلیک کۆدەکە بنێرە تا سێرڤەر پشتڕاستی بکاتەوە و خەڵاتی <strong>١٥ دۆلار</strong> بە شێوازی نەختینەیی (FastPay, FIB, زین کاش یان حەواڵە) پێشکەشت بکرێت!</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <!-- GAMEPLAY RULES & INSTRUCTIONS -->
+                <div class="lobby-card rules-card">
+                    <div class="card-badge-cyan"><i class="fa-solid fa-compass"></i> ڕێنمایی و یاساکان</div>
+                    <h3>شێوازی یاری و تێپەڕاندنی قۆناغەکان:</h3>
+                    
+                    <div class="rules-list">
+                        <div class="rule-item">
+                            <div class="rule-icon"><i class="fa-solid fa-key"></i></div>
+                            <div class="rule-text">
+                                <strong>هەمەچەشنیی مەتەڵەکان:</strong>
+                                <span>قۆناغەکان بەپێی Hex, Caesar, Binary, Morse, Atbash, و جوگرافیا داڕێژراون.</span>
+                            </div>
+                        </div>
+
+                        <div class="rule-item">
+                            <div class="rule-icon"><i class="fa-solid fa-eye"></i></div>
+                            <div class="rule-text">
+                                <strong>تەڵەکانی مێنتالیزم:</strong>
+                                <span>سیستەمەکە بە فێڵی دەروونی بیرکردنەوەت دەخوێنێتەوە، وریای پارادۆکسەکان بە!</span>
+                            </div>
+                        </div>
+
+                        <div class="rule-item">
+                            <div class="rule-icon"><i class="fa-solid fa-toolbox"></i></div>
+                            <div class="rule-text">
+                                <strong>ئامرازە شیکارییەکان:</strong>
+                                <span>لەناو تێرمیناڵ وەرگێڕی هێکس، باینەری ٦٤، مۆرس، و سۆرس کۆدت بۆ ئامادە کراوە.</span>
+                            </div>
+                        </div>
+
+                        <div class="rule-item">
+                            <div class="rule-icon"><i class="fa-solid fa-shield-virus"></i></div>
+                            <div class="rule-text">
+                                <strong>پارێزراو لە سێرڤەر:</strong>
+                                <span>وەڵامەکان تەنها لە سێرڤەرن و تاقیکردنەوەی هەڕەمەکی بۆ ماوەی ٣٠ چرکە بلۆکت دەکات.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- EMBEDDED LIVE LEADERBOARD IN LOBBY -->
+            <div class="lobby-leaderboard-section">
+                <div class="section-head">
+                    <h2><i class="fa-solid fa-trophy text-gold"></i> هۆڵی ناوبانگی هاکەرە بلیمەتەکان (Live Leaderboard)</h2>
+                    <span class="head-sub">ئەو کەسانەی لە کەمترین کاتدا توانیویانە مەتەڵەکان بشکێنن:</span>
+                </div>
+
+                <div class="leaderboard-table-container">
+                    <table class="cyber-table">
+                        <thead>
+                            <tr>
+                                <th>ڕیزبەندی</th>
+                                <th>ناوی هاکەر</th>
+                                <th>کاتی بردنەوە</th>
+                                <th>بەروار</th>
+                                <th>دۆخی سەلماندن</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lobby-leaderboard-body">
+                            <!-- Injected via API -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ====================================================================
+         3. ACTIVE GAME STAGE (15-Level Terminal Workspace)
+         ==================================================================== -->
+    <div id="game-stage" class="game-stage-screen" style="display: none;">
+        
+        <!-- Game HUD -->
+        <header class="cyber-header">
+            <div class="header-inner">
+                <div class="terminal-brand">
+                    <span class="status-dot blink"></span>
+                    <span class="terminal-title">MIND_HACK://HARDCORE_15</span>
+                    <span class="player-pill" id="hud-player-pill" title="هاکەری تۆمارکراو">
+                        <i class="fa-solid fa-user-ninja"></i>
+                        <strong id="hud-player-name-display">...</strong>
+                    </span>
+                    <span class="system-clearance" id="clearance-tag">ئاست: ١ / ١٥</span>
+                    <span class="server-badge" id="server-status"><i class="fa-solid fa-shield-virus"></i> سێرڤەر: پارێزراوە</span>
+                </div>
+
+                <!-- Speedrun Stopwatch & Progress Bar -->
+                <div class="progress-zone">
+                    <div class="level-indicator">
+                        <div class="timer-box">
+                            <i class="fa-solid fa-stopwatch timer-icon"></i>
+                            <span id="speedrun-timer" class="timer-digits">00:00:00</span>
+                        </div>
+                        <span class="diff-tag" id="level-difficulty-badge">دەستپێک</span>
+                        <strong id="current-level-display">١ لە ١٥</strong>
+                    </div>
+                    <div class="progress-bar-track">
+                        <div id="progress-bar-fill" class="progress-fill" style="width: 6.66%;"></div>
+                    </div>
+                </div>
+
+                <!-- Header Controls & Return to Lobby -->
+                <div class="header-right">
+                    <button id="btn-return-lobby" class="cyber-icon-btn nav-btn" title="گەڕانەوە بۆ لۆبی">
+                        <i class="fa-solid fa-house"></i>
+                        <span>لۆبی</span>
+                    </button>
+
+                    <button id="btn-open-leaderboard" class="cyber-icon-btn" title="تەختەی پێشەنگەکان">
+                        <i class="fa-solid fa-trophy"></i>
+                        <span>پێشەنگەکان</span>
+                    </button>
+
+                    <button id="btn-sound-toggle" class="cyber-icon-btn" title="دەنگ">
+                        <i class="fa-solid fa-volume-high" id="sound-icon"></i>
+                    </button>
+
+                    <div class="dev-tag" id="btn-dev-info" title="گەشەپێدەر">
+                        <span class="dev-badge-title">گەشەپێدەر:</span>
+                        <strong class="dev-author">Zhiyar Hemn</strong>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Terminal Container -->
+        <main class="terminal-container">
+            <div class="terminal-window">
+                <div class="window-titlebar">
+                    <div class="window-dots">
+                        <span class="dot close"></span>
+                        <span class="dot min"></span>
+                        <span class="dot max"></span>
+                    </div>
+                    <div class="window-title" id="stage-title">قۆناغی ١: دەستپێکی هێکسادسیمڵ (Port 8080 Handshake)</div>
+                    <div class="security-level" id="security-badge">BACKEND_VERIFIED</div>
+                </div>
+
+                <div class="terminal-body" id="terminal-screen">
+                    <!-- Populated via Level Dispatcher -->
+                </div>
+
+                <!-- Cyber Toolbelt -->
+                <div class="cyber-toolbelt">
+                    <span class="toolbelt-label"><i class="fa-solid fa-toolbox"></i> ئامرازە شیکارییەکان:</span>
+                    <button id="btn-tool-hex" class="mini-tool-btn"><i class="fa-solid fa-barcode"></i> وەرگێڕی Hex</button>
+                    <button id="btn-tool-base64" class="mini-tool-btn"><i class="fa-solid fa-shield-halved"></i> وەرگێڕی Base64</button>
+                    <button id="btn-tool-morse" class="mini-tool-btn"><i class="fa-solid fa-wave-square"></i> خشتەی مۆرس</button>
+                    <button id="btn-tool-inspect" class="mini-tool-btn"><i class="fa-solid fa-code"></i> سۆرس کۆد (Inspect)</button>
+                </div>
+
+                <!-- Command Line Input Bar -->
+                <div class="terminal-input-bar" id="input-bar-container">
+                    <span class="prompt-arrow">&gt;_</span>
+                    <input 
+                        type="text" 
+                        id="cyber-input" 
+                        placeholder="کلیلە شیکارکراوەکە لێرە بنووسە بۆ ناردنی بۆ سێرڤەر..."
+                        autocomplete="off" 
+                        autocorrect="off" 
+                        autocapitalize="off" 
+                        spellcheck="false">
+                    <button id="btn-submit-code" class="btn-cyber-submit">
+                        <span>پشکنین لە سێرڤەر</span>
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ====================================================================
+         MODALS (Leaderboard, Tools, Dev, Victory)
+         ==================================================================== -->
+
+    <!-- MODAL: LEADERBOARD -->
+    <div class="cyber-modal-backdrop" id="modal-leaderboard" style="display: none;">
+        <div class="cyber-modal leaderboard-modal">
+            <div class="modal-head">
+                <h3><i class="fa-solid fa-trophy" style="color:var(--neon-amber);"></i> تەختەی پێشەنگەکان (هۆڵی ناوبانگی هاکەرە بلیمەتەکان)</h3>
+                <button class="modal-close-x" id="btn-close-leaderboard">&times;</button>
+            </div>
+            <p class="modal-sub">ئەو کەسانەی توانیویانە هەر ١٥ قۆناغە سەختەکە لە کەمترین کاتدا ببڕن:</p>
+            
+            <div class="leaderboard-table-container">
+                <table class="cyber-table">
+                    <thead>
+                        <tr>
+                            <th>ڕیزبەندی</th>
+                            <th>ناوی هاکەر</th>
+                            <th>کاتی بردنەوە</th>
+                            <th>بەروار</th>
+                            <th>دۆخی سەلماندن</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboard-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: HEX DECODER -->
+    <div class="cyber-modal-backdrop" id="modal-hex" style="display: none;">
+        <div class="cyber-modal">
+            <div class="modal-head">
+                <h3><i class="fa-solid fa-barcode"></i> ئامرازی شیکردنەوەی Hexadecimal</h3>
+                <button class="modal-close-x" id="btn-close-hex">&times;</button>
+            </div>
+            <p class="modal-sub">ژمارەی هێکس (Hex) بنووسە بۆ شیکردنەوەی دەقەکە:</p>
+            <input type="text" id="hex-input" class="cyber-modal-input" placeholder="بۆ نموونە: 4F 56 45 52 52 49 44 45">
+            <button id="btn-run-hex" class="cyber-btn run-btn">شیکردنەوە (Decode)</button>
+            <div class="tool-result-box" id="hex-result">ئەنجام: ...</div>
+        </div>
+    </div>
+
+    <!-- MODAL: BASE64 DECODER -->
+    <div class="cyber-modal-backdrop" id="modal-base64" style="display: none;">
+        <div class="cyber-modal">
+            <div class="modal-head">
+                <h3><i class="fa-solid fa-shield-halved"></i> ئامرازی شیکردنەوەی Base64</h3>
+                <button class="modal-close-x" id="btn-close-base64">&times;</button>
+            </div>
+            <p class="modal-sub">تێکستی شفرەکراوی Base64 لێرە دابنێ:</p>
+            <input type="text" id="base64-input" class="cyber-modal-input" placeholder="بۆ نموونە: UVVBTlRVTV9MRUFQXzIwMjY=">
+            <button id="btn-run-base64" class="cyber-btn run-btn">شیکردنەوە (Decode)</button>
+            <div class="tool-result-box" id="base64-result">ئەنجام: ...</div>
+        </div>
+    </div>
+
+    <!-- MODAL: MORSE CODE CHART -->
+    <div class="cyber-modal-backdrop" id="modal-morse" style="display: none;">
+        <div class="cyber-modal">
+            <div class="modal-head">
+                <h3><i class="fa-solid fa-table"></i> خشتەی وەرگێڕانی کۆدی مۆرس</h3>
+                <button class="modal-close-x" id="btn-close-morse">&times;</button>
+            </div>
+            <div class="morse-grid">
+                <div><strong>A:</strong> .-</div><div><strong>B:</strong> -...</div>
+                <div><strong>C:</strong> -.-.</div><div><strong>D:</strong> -..</div>
+                <div><strong>E:</strong> .</div><div><strong>F:</strong> ..-.</div>
+                <div><strong>G:</strong> --.</div><div><strong>H:</strong> ....</div>
+                <div><strong>I:</strong> ..</div><div><strong>J:</strong> .---</div>
+                <div><strong>K:</strong> -.-</div><div><strong>L:</strong> .-..</div>
+                <div><strong>M:</strong> --</div><div><strong>N:</strong> -.</div>
+                <div><strong>O:</strong> ---</div><div><strong>P:</strong> .--.</div>
+                <div><strong>Q:</strong> --.-</div><div><strong>R:</strong> .-.</div>
+                <div><strong>S:</strong> ...</div><div><strong>T:</strong> -</div>
+                <div><strong>U:</strong> ..-</div><div><strong>V:</strong> ...-</div>
+                <div><strong>W:</strong> .--</div><div><strong>X:</strong> -..-</div>
+                <div><strong>Y:</strong> -.--</div><div><strong>Z:</strong> --..</div>
+                <div><strong>0:</strong> -----</div><div><strong>1:</strong> .----</div>
+                <div><strong>5:</strong> .....</div><div><strong>9:</strong> ----.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: VIRTUAL INSPECTOR -->
+    <div class="cyber-modal-backdrop" id="modal-inspector" style="display: none;">
+        <div class="cyber-modal inspector-modal">
+            <div class="modal-head">
+                <h3><i class="fa-solid fa-code"></i> شیکارکەری سۆرس کۆدی DOM</h3>
+                <button class="modal-close-x" id="btn-close-inspector">&times;</button>
+            </div>
+            <div class="code-view" id="virtual-code-view"></div>
+        </div>
+    </div>
+
+    <!-- MODAL: DEVELOPER PROFILE (Zhiyar Hemn - ژیار هێمن) -->
+    <div class="cyber-modal-backdrop" id="modal-dev" style="display: none;">
+        <div class="cyber-modal dev-modal">
+            <div class="modal-head">
+                <h3><i class="fa-solid fa-shield-halved"></i> سیستەمی دیزاین و گەشەپێدان</h3>
+                <button class="modal-close-x" id="btn-close-dev">&times;</button>
+            </div>
+            <div class="dev-card-body">
+                <div class="cyber-avatar">ZH</div>
+                <h2>Zhiyar Hemn</h2>
+                <h4 style="color:var(--neon-green); margin-top:-6px;">ژیار هێمن</h4>
+                <p class="cyber-subtitle">ئەندازیار و دروستکەری یاریی MIND_HACK</p>
+                <p class="dev-desc">
+                    پڕۆژەیەکی سەختی مێنتالیزم، بیرکاری، شیفرەشکاندن، و مەتەڵی ئەلیکترۆنی بە زمانی کوردی سۆرانی، پارێزراو بە سێرڤەری تایبەتی Backend دژی دەستکاریکردن و هاککردن.
+                </p>
+                <div class="dev-contacts">
+                    <a href="https://wa.me/?text=سڵاو%20Zhiyar%20Hemn%20دەربارەی%20خەڵاتەکەی%20MIND_HACK" target="_blank" class="cyber-btn wa-btn">
+                        <i class="fa-brands fa-whatsapp"></i>
+                        <span>پەیوەندی لە WhatsApp</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: GRAND VICTORY VAULT & $15 PRIZE CLAIM -->
+    <div class="cyber-modal-backdrop" id="modal-victory" style="display: none;">
+        <div class="cyber-modal victory-modal">
+            <div class="victory-banner">
+                <i class="fa-solid fa-crown victory-icon"></i>
+                <h2 id="victory-player-congrats">بێوێنەیت! تۆ تەواوی ١٥ قۆناغەکەت لە سێرڤەر بڕی!</h2>
+                <p>تۆ شایستەی خەڵاتی ١٥ دۆلاری نەختینەییت! کاتی تەواوکردن: <strong id="final-time-display" style="color:var(--neon-green);">00:00</strong>.</p>
+            </div>
+
+            <!-- OFFICIAL CYBER SEAL (مۆری فەرمیی بردنەوە بە ناوی هاکەر) -->
+            <div class="official-cyber-seal-badge">
+                <div class="seal-outer-circle">
+                    <div class="seal-inner-circle">
+                        <div class="seal-top-stars">★ ★ ★</div>
+                        <div class="seal-title">مۆری فەرمیی شایەتمانی بردنەوە</div>
+                        <div class="seal-eng-title">OFFICIAL TAMPER-PROOF SEAL</div>
+                        <div class="seal-awarded-to">بەخشرا بە هاکەری بلیمەت:</div>
+                        <div id="seal-player-name-display" class="seal-player-name">...</div>
+                        <div class="seal-signature">
+                            <span>ئەندازیار و دروستکەر:</span>
+                            <strong>ژیار هێمن (Zhiyar Hemn)</strong>
+                        </div>
+                        <div class="seal-code" id="seal-token-badge">MH-MASTER-15-VERIFIED</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="secret-token-box">
+                <span class="token-lbl">کۆدی فەرمیی سەلماندنی خەڵات ($15 USD Claim Token):</span>
+                <div class="token-code" id="final-victory-token">MH-MASTER-15-SERVER-ZH</div>
+                <button class="btn-copy-token" id="btn-copy-token"><i class="fa-solid fa-copy"></i> کۆپیکردنی کۆد</button>
+            </div>
+
+            <!-- Submit to Leaderboard -->
+            <div class="claim-leaderboard-box" id="claim-leaderboard-box">
+                <h4><i class="fa-solid fa-trophy"></i> تۆمارکردن لە تەختەی پێشەنگەکان بەم ناوەوە:</h4>
+                <div class="claim-input-group">
+                    <input type="text" id="solver-name-input" placeholder="ناوی هاکەر..." class="cyber-modal-input" style="margin-bottom:0;" readonly>
+                    <button id="btn-submit-leaderboard" class="cyber-btn run-btn" style="width:auto; padding:0 20px;">تۆمارکردن</button>
+                </div>
+                <div id="claim-result-msg" style="margin-top:8px; font-size:0.85rem;"></div>
+            </div>
+
+            <!-- Actions: WhatsApp Claim & Download Story Card -->
+            <div class="victory-actions-grid">
+                <a id="btn-claim-whatsapp" href="#" target="_blank" class="cyber-btn claim-wa-btn">
+                    <i class="fa-brands fa-whatsapp"></i>
+                    <span>ناردنی کۆدی خەڵاتی ١٥$ بۆ ژیار هێمن لە واتسئاپ</span>
+                </a>
+
+                <button id="btn-download-story-card" class="cyber-btn story-btn">
+                    <i class="fa-solid fa-camera-retro"></i>
+                    <span>داگرتنی مۆر و بڕوانامە بۆ ستۆری (Instagram/Snapchat)</span>
+                </button>
+            </div>
+
+            <!-- Hidden Canvas for Story Card Export -->
+            <canvas id="story-card-canvas" width="1080" height="1920" style="display: none;"></canvas>
+        </div>
+    </div>
+
+    <!-- SCRIPT -->
+    <script src="mindhack.js"></script>
+</body>
+</html>
