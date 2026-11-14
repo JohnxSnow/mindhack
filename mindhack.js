@@ -499,6 +499,33 @@ class MindHackGame {
         this.renderLeaderboardTable(unique);
     }
 
+    renderLeaderboardTable(list) {
+        const populate = (container) => {
+            if (!container) return;
+            if (!list || list.length === 0) {
+                container.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:22px; color:var(--text-muted);"><i class="fa-solid fa-trophy" style="color:var(--neon-amber);"></i> هیچ کەسێک تا ئێستا تۆمار نەکراوە! ببە بە یەکەم کەس و خەڵاتی ١٥$ ببەرەوە.</td></tr>`;
+                return;
+            }
+
+            container.innerHTML = "";
+            list.forEach((item, idx) => {
+                const tr = document.createElement("tr");
+                const rankClass = idx === 0 ? "rank-1" : idx === 1 ? "rank-2" : idx === 2 ? "rank-3" : "";
+                tr.innerHTML = `
+                    <td><span class="rank-badge ${rankClass}">#${item.rank || idx + 1}</span></td>
+                    <td><strong style="color:#fff;">${item.name}</strong></td>
+                    <td style="font-family:var(--font-mono); color:var(--neon-green); font-weight:700;">${item.time}</td>
+                    <td style="font-size:0.8rem; color:var(--text-muted);">${item.date}</td>
+                    <td><span class="verified-pill"><i class="fa-solid fa-check"></i> پەسەندکراو</span></td>
+                `;
+                container.appendChild(tr);
+            });
+        };
+
+        populate(this.leaderboardBody);
+        populate(this.lobbyLeaderboardBody);
+    }
+
     async loadLeaderboard() {
         return this.fetchLeaderboard();
     }
