@@ -2,3 +2,7 @@ node_modules/
 .DS_Store
 Thumbs.db
 *.log
+
+mindhack_upload/
+mindhack_upload.zip
+scratch/

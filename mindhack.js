@@ -395,116 +395,102 @@ class MindHackGame {
         if (this.leaderboardBody) this.leaderboardBody.innerHTML = loadingHtml;
         if (this.lobbyLeaderboardBody) this.lobbyLeaderboardBody.innerHTML = loadingHtml;
 
+        let serverList = null;
         try {
             const res = await fetch('/api/leaderboard');
-            if (!res.ok) throw new Error('API unavailable');
-            const data = await res.json();
-            if (Array.isArray(data)) {
-                this.renderLeaderboardTable(data);
-                return;
+            if (res.ok) {
+                const data = await res.json();
+                if (Array.isArray(data)) {
+                    serverList = data;
+                }
             }
-            throw new Error('Invalid format');
         } catch (e) {
-            let localList = [];
-            try {
-                localList = JSON.parse(localStorage.getItem('mh_local_leaderboard') || '[]');
-            } catch (err) {}
-            if (!localList || localList.length === 0) {
-                localList = [
-                    { rank: 1, name: "سەرکەوت (Sarkawt)", time: "14:22", date: "2026-11-12", token: "MH-MASTER-15-ALPHA-ZH" },
-                    { rank: 2, name: "ڕەوەند (Rawand)", time: "19:45", date: "2026-11-13", token: "MH-MASTER-15-BETA-ZH" }
-                ];
-            }
-            this.renderLeaderboardTable(localList);
+            serverList = null;
         }
-    }
 
-    renderLeaderboardTable(list) {
-        const populate = (container) => {
-            if (!container) return;
-            if (!list || list.length === 0) {
-                container.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:22px; color:var(--text-muted);"><i class="fa-solid fa-trophy" style="color:var(--neon-amber);"></i> هیچ کەسێک تا ئێستا تۆمار نەکراوە! ببە بە یەکەم کەس و خەڵاتی ١٥$ ببەرەوە.</td></tr>`;
-                return;
+        let localList = [];
+        try {
+            localList = JSON.parse(localStorage.getItem('mh_local_leaderboard') || '[]');
+        } catch (err) { localList = []; }
+
+        const defaultList = [
+            { rank: 1, name: "سەرکەوت (Sarkawt)", time: "14:22", date: "2026-11-12", token: "MH-MASTER-15-ALPHA-ZH" },
+            { rank: 2, name: "ڕەوەند (Rawand)", time: "19:45", date: "2026-11-13", token: "MH-MASTER-15-BETA-ZH" }
+        ];
+
+        let combined = [...(serverList || []), ...localList];
+        if (combined.length === 0) {
+            combined = defaultList;
+        }
+
+        const seen = new Set();
+        const unique = [];
+        for (const item of combined) {
+            const key = item.token || `${item.name}_${item.time}`;
+            if (!seen.has(key)) {
+                seen.add(key);
+                unique.push(item);
             }
+        }
 
-            container.innerHTML = "";
-            list.forEach((item, idx) => {
-                const tr = document.createElement("tr");
-                const rankClass = idx === 0 ? "rank-1" : idx === 1 ? "rank-2" : idx === 2 ? "rank-3" : "";
-                tr.innerHTML = `
-                    <td><span class="rank-badge ${rankClass}">${item.rank || idx + 1}</span></td>
-                    <td><strong style="color:#fff;">${item.name}</strong></td>
-                    <td style="font-family:var(--font-mono); color:var(--neon-green); font-weight:700;">${item.time}</td>
-                    <td style="font-size:0.8rem; color:var(--text-muted);">${item.date}</td>
-                    <td><span class="verified-pill"><i class="fa-solid fa-check"></i> پەسەندکراو</span></td>
-                `;
-                container.appendChild(tr);
-            });
+        const toSec = (t) => {
+            const parts = (t || '99:99').split(':').map(Number);
+            if (parts.length === 2) return (parts[0] || 0) * 60 + (parts[1] || 0);
+            if (parts.length === 3) return (parts[0] || 0) * 3600 + (parts[1] || 0) * 60 + (parts[2] || 0);
+            return 99999;
         };
 
-        populate(this.leaderboardBody);
-        populate(this.lobbyLeaderboardBody);
+        unique.sort((a, b) => toSec(a.time) - toSec(b.time));
+        unique.forEach((entry, idx) => entry.rank = idx + 1);
+
+        this.renderLeaderboardTable(unique);
+    }
+
+    async loadLeaderboard() {
+        return this.fetchLeaderboard();
     }
 
     async submitLeaderboardClaim() {
-        const name = this.solverNameInput.value.trim();
-        if (!name) {
-            this.claimResultMsg.innerHTML = `<span style="color:#ef4444;">تکایە ناوی خۆت بنووسە!</span>`;
-            return;
+        const name = (this.solverNameInput ? this.solverNameInput.value.trim() : "") || this.playerName || "MASTER HACKER";
+        const time = this.finalTimeFormatted || "00:00";
+        const token = (this.finalVictoryToken ? this.finalVictoryToken.innerText.trim() : "") || `MH-MASTER-15-${Math.floor(1000 + Math.random() * 9000)}-ZH`;
+
+        if (this.btnSubmitLeaderboard) {
+            this.btnSubmitLeaderboard.disabled = true;
+            this.btnSubmitLeaderboard.innerText = "تۆمارکرا";
+            this.btnSubmitLeaderboard.style.display = "none";
         }
 
-        this.btnSubmitLeaderboard.disabled = true;
-        this.btnSubmitLeaderboard.innerText = "لە کاتی ناردندا...";
-
+        // 1. Always save to LocalStorage immediately
         try {
-            const res = await fetch('/api/claim', {
+            let list = JSON.parse(localStorage.getItem('mh_local_leaderboard') || '[]');
+            if (!list.some(entry => entry.token === token || (entry.name === name && entry.time === time))) {
+                list.push({
+                    name: name,
+                    time: time,
+                    date: new Date().toISOString().split('T')[0],
+                    token: token
+                });
+                localStorage.setItem('mh_local_leaderboard', JSON.stringify(list));
+            }
+        } catch (e) {}
+
+        // 2. Try submitting to Server if online
+        try {
+            await fetch('/api/claim', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    name: name,
-                    time: this.finalTimeFormatted,
-                    token: this.finalVictoryToken.innerText
-                })
+                body: JSON.stringify({ name: name, time: time, token: token })
             });
+        } catch (e) {}
 
-            if (!res.ok) throw new Error('API offline fallback');
-            const data = await res.json();
-            if (data.success) {
-                this.claimResultMsg.innerHTML = `<span style="color:#00ff66;"><i class="fa-solid fa-circle-check"></i> ناوت لە تەختەی پێشەنگەکان تۆمار کرا!</span>`;
-                this.solverNameInput.disabled = true;
-                this.btnSubmitLeaderboard.style.display = "none";
-                this.loadLeaderboard();
-            } else {
-                this.claimResultMsg.innerHTML = `<span style="color:#ef4444;">${data.message}</span>`;
-                this.btnSubmitLeaderboard.disabled = false;
-                this.btnSubmitLeaderboard.innerText = "تۆمارکردن";
-            }
-        } catch (e) {
-            let list = [];
-            try {
-                list = JSON.parse(localStorage.getItem('mh_local_leaderboard') || '[]');
-            } catch (err) { list = []; }
-            if (!list || list.length === 0) {
-                list = [
-                    { rank: 1, name: "سەرکەوت (Sarkawt)", time: "14:22", date: "2026-11-12", token: "MH-MASTER-15-ALPHA-ZH" },
-                    { rank: 2, name: "ڕەوەند (Rawand)", time: "19:45", date: "2026-11-13", token: "MH-MASTER-15-BETA-ZH" }
-                ];
-            }
-            list.push({
-                rank: list.length + 1,
-                name: name,
-                time: this.finalTimeFormatted,
-                date: new Date().toISOString().split('T')[0],
-                token: this.finalVictoryToken ? this.finalVictoryToken.innerText : "MH-MASTER-LOCAL-ZH"
-            });
-            try {
-                localStorage.setItem('mh_local_leaderboard', JSON.stringify(list));
-            } catch (err) {}
-            this.claimResultMsg.innerHTML = `<span style="color:#00ff66;"><i class="fa-solid fa-circle-check"></i> ناوت بە سەرکەوتوویی تۆمار کرا!</span>`;
-            this.solverNameInput.disabled = true;
-            this.btnSubmitLeaderboard.style.display = "none";
-            this.loadLeaderboard();
+        // 3. Update feedback UI in modal
+        if (this.claimResultMsg) {
+            this.claimResultMsg.innerHTML = `<span style="color:#00ff66; font-weight:700;"><i class="fa-solid fa-circle-check"></i> ناوت [${name}] بە کاتی [${time}] بە سەرکەوتوویی تۆمار کرا!</span>`;
         }
+
+        // 4. Update tables
+        await this.fetchLeaderboard();
     }
 
     // =========================================================================
@@ -1297,6 +1283,9 @@ class MindHackGame {
 
         const message = encodeURIComponent(`سڵاو ژیار هێمن (Zhiyar Hemn)! من [${solverName}] تەواوی ١٥ قۆناغە سەخت و دژوارەکەی یاریی MIND_HACKم تێپەڕاند لە کاتی [${this.finalTimeFormatted}]! ئەمەش مۆری فەرمی و کۆدی سەلماندنی بردنەوەمە لە سێرڤەر: ${victoryToken}`);
         this.btnClaimWhatsApp.href = `https://wa.me/?text=${message}`;
+
+        // Auto-register victory to leaderboard immediately!
+        this.submitLeaderboardClaim();
 
         this.modalVictory.style.display = "flex";
     }
